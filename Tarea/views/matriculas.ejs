@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Matrículas</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center">Sistema de Matrículas</h1>
+        <hr>
+
+        <h3>Seleccione un curso:</h3>
+        <form action="/confirmacion" method="post">
+            <div class="form-group">
+                <label for="curso">Curso:</label>
+                <select class="form-control" id="curso" name="curso">
+                    <option value="Java">Java</option>
+                    <option value="PHP">PHP</option>
+                    <option value=".NET">.NET</option>
+                </select>
+            </div>
+            <button type="button" class="btn btn-primary" id="btnSiguiente">Siguiente</button>
+        </form>
+
+        <div id="paso2" style="display: none;">
+            <h3>Seleccione los módulos:</h3>
+            <form action="/confirmacion" method="post">
+                <div class="form-group">
+                    <input type="checkbox" name="modulo[]" value="Basico"> Básico
+                    <input type="checkbox" name="modulo[]" value="Intermedio"> Intermedio
+                    <input type="checkbox" name="modulo[]" value="Avanzado"> Avanzado
+                </div>
+                <button type="button" class="btn btn-primary" id="btnSiguiente2">Siguiente</button>
+            </form>
+        </div>
+
+        <div id="paso3" style="display: none;">
+            <h3>Seleccione el medio de pago:</h3>
+            <form action="/confirmacion" method="post">
+                <div class="form-group">
+                    <input type="radio" name="medioPago" value="Tarjeta"> Tarjeta de crédito
+                    <input type="radio" name="medioPago" value="Efectivo"> Pago en efectivo
+                </div>
+                <button type="button" class="btn btn-primary" id="btnConfirmar">Confirmar</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            var cursoSeleccionado, modulosSeleccionados, totalMatricula;
+
+            // Evento para el botón de siguiente en el paso 1
+            $("#btnSiguiente").click(function() {
+                cursoSeleccionado = $("#curso").val();
+                if (cursoSeleccionado) {
+                    $("#paso2").show();
+                } else {
+                    alert("Debe seleccionar un curso");
+                }
+            });
+
+            // Evento para el botón de siguiente en el paso 2
+            $("#btnSiguiente2").click(function() {
+                modulosSeleccionados = [];
+                $("#paso2 input[type=checkbox]:checked").each(function() {
+                    modulosSeleccionados.push($(this).val());
+                });
+
+                if (modulosSeleccionados.length > 0) {
+                    $("#paso3").show();
+                } else {
+                    alert("Debe seleccionar al menos un módulo");
+                }
+            });
+
+            // Evento para el botón de confirmar en el paso 3
+            $("#btnConfirmar").click(function() {
+                var medioPago = $("input[name='medioPago']:checked").val();
+
+                if (medioPago) {
+                    totalMatricula = 0;
+
+                    if (cursoSeleccionado === "Java") {
+                        totalMatricula = modulosSeleccionados.length * 1200;
+                    } else if (cursoSeleccionado === "PHP") {
+                        totalMatricula = modulosSeleccionados.length * 800;
+                    } else if (cursoSeleccionado === ".NET") {
+                        totalMatricula = modulosSeleccionados.length * 1500;
+                    }
+
+                    if (medioPago === "efectivo") {
+                        totalMatricula *= 0.9;
+                    }
+
+                    // Enviar los datos al servidor para cargar la plantilla de confirmación
+                    $.ajax({
+                        url: "/confirmacion",
+                        method: "POST",
+                        data: {
+                            curso: cursoSeleccionado,
+                            medioPago: medioPago,
+                            modulos: modulosSeleccionados.join(", "),
+                            total: totalMatricula
+                        },
+                        success: function(response) {
+                            // Reemplazar el contenido actual con la respuesta (plantilla de confirmación)
+                            $("body").html(response);
+                        },
+                        error: function(error) {
+                            console.log(error);
+                        }
+                    });
+                } else {
+                    alert("Debe seleccionar un medio de pago");
+                }
+            });
+
+        });
+    </script>
+</body>
+</html>
